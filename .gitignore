@@ -1,0 +1,42 @@
+
+
+# Memorie Claude
+.claude/
+CLAUDE.md
+
+# Documente de implementare (note de lucru, nu le urcam in repo)
+Implementation_*
+**/Implementation_*
+
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Medii virtuale
+.venv/
+venv/
+env/
+
+# Profiluri salvate de utilizator (date locale, nu le versionam)
+profiles/
+*.profile.json
+
+# Loguri
+*.log
+logs/
+
+# Setari IDE / editor
+.vscode/
+.idea/
+*.swp
+
+# Fisiere sistem
+Thumbs.db
+desktop.ini
+.DS_Store
