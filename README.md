@@ -1,89 +1,88 @@
 # CS2 Server Picker
 
-Aplicatie desktop pentru Windows care blocheaza serverele Valve din regiunile
-nedorite (de exemplu Rusia si Turcia) folosind Windows Firewall. Scopul este ca
-matchmaking-ul din CS2 sa prefere serverele din Europa de Vest (Frankfurt), ca sa
-joci cu o latenta mai buna si alaturi de jucatori predominant din EU West.
+A Windows desktop application that blocks Valve servers in unwanted regions
+(for example Russia and Turkey) using Windows Firewall. The goal is to make CS2
+matchmaking prefer servers in Western Europe (Frankfurt), so you get better
+latency and play mostly with players from EU West.
 
-## Ce vrem sa facem
+## What we want to do
 
-1. Afisam o lista de regiuni (RU, TR, EU West, etc.).
-2. Bifam regiunile pe care vrem sa le blocam.
-3. Apasam "Apply" si aplicatia adauga regulile in Windows Firewall.
-4. Dam play in CS2, iar matchmaking-ul evita serverele blocate.
-5. Apasam "Reset" si toate regulile adaugate de aplicatie sunt sterse.
+1. Show a list of regions (RU, TR, EU West, etc.).
+2. Check the regions we want to block.
+3. Press "Apply" and the app adds the rules to Windows Firewall.
+4. Launch CS2, and matchmaking avoids the blocked servers.
+5. Press "Reset" and all rules added by the app are removed.
 
-## Cum functioneaza pe scurt
+## How it works in short
 
 ```
-Tu (RO) -> CS2 cauta server
-        -> serverele RU/TR sunt blocate in firewall
-        -> CS2 gaseste doar servere Frankfurt / EU West
-        -> jucatori predominant din EU West
+You (RO) -> CS2 searches for a server
+         -> RU/TR servers are blocked in the firewall
+         -> CS2 only finds Frankfurt / EU West servers
+         -> players are mostly from EU West
 ```
 
-Important: blocam servere, nu jucatori. Un jucator din RU se poate conecta
-totusi pe un server din Frankfurt.
+Important: we block servers, not players. A player from RU can still connect to
+a Frankfurt server.
 
-## Implementarea fiecarui fisier
+## Implementation of each file
 
-Acesta este planul de implementare. Codul efectiv il scriem pas cu pas.
+This is the implementation plan. The actual code is written step by step.
 
 ### main.py
-Punctul de intrare al aplicatiei. Verifica daca programul ruleaza ca
-Administrator (necesar pentru firewall), apoi porneste fereastra principala din
-`gui/app.py`.
+The application entry point. Checks whether the program runs as Administrator
+(required for the firewall), then starts the main window from `gui/app.py`.
 
 ### core/firewall.py
-Motorul aplicatiei. Comunica cu Windows Firewall prin `subprocess` si `netsh`.
-Functii planificate:
-- adaugare regula de blocare outbound catre un IP range
-- stergere a unei reguli dupa nume
-- listare a regulilor existente create de aplicatie
-- reset complet (sterge toate regulile cu prefix `CS2SP_`)
+The engine of the app. Talks to Windows Firewall through `subprocess` and
+`netsh`. Planned functions:
+- add an outbound block rule for an IP range
+- delete a rule by name
+- list the existing rules created by the app
+- full reset (delete all rules with the `CS2SP_` prefix)
 
-Toate regulile create folosesc prefixul `CS2SP_` in nume, ca sa fie usor de
-identificat si de sters fara a afecta alte reguli din firewall.
+All created rules use the `CS2SP_` prefix in their name, so they are easy to
+identify and remove without affecting other firewall rules.
 
 ### core/regions.py
-Incarca `data/regions.json` si ofera logica pentru regiuni si IP ranges.
-Functii planificate:
-- citire si validare a fisierului JSON
-- returnarea listei de regiuni catre GUI
-- maparea unei regiuni la IP range-urile ei, pentru `firewall.py`
+Loads `data/regions.json` and provides the logic for regions and IP ranges.
+Planned functions:
+- read and validate the JSON file
+- return the list of regions to the GUI
+- map a region to its IP ranges, for `firewall.py`
 
 ### core/profiles.py
-Gestioneaza profilurile salvate (combinatii de regiuni bifate).
-Functii planificate:
-- salvarea unui profil pe disc
-- incarcarea unui profil existent
-- listarea si stergerea profilurilor
+Manages saved profiles (combinations of checked regions).
+Planned functions:
+- save a profile to disk
+- load an existing profile
+- list and delete profiles
 
 ### gui/app.py
-Fereastra principala construita cu customtkinter. Aduce la un loc lista de
-region cards, panoul de profiluri si butoanele "Apply" si "Reset".
+The main window built with customtkinter. Brings together the list of region
+cards, the profile panel and the "Apply" and "Reset" buttons.
 
 ### gui/region_card.py
-Un card vizual pentru o singura regiune: checkbox, steag si numele regiunii.
-Tine starea (bifat / nebifat) pentru fiecare regiune.
+A visual card for a single region: checkbox, flag and the region name. Keeps the
+state (checked / unchecked) for each region.
 
 ### gui/profile_panel.py
-Panoul lateral pentru profiluri: salvare profil nou, alegere profil existent,
-stergere profil.
+The side panel for profiles: save a new profile, pick an existing profile,
+delete a profile.
 
 ### data/regions.json
-Datele cu IP range-urile serverelor Valve, grupate pe regiuni. Se poate
-actualiza ocazional, deoarece IP-urile Valve se pot schimba in timp.
+The data with the IP ranges of Valve servers, grouped by region. It can be
+updated occasionally, because Valve IPs may change over time.
 
 ### assets/flags/
-Iconite cu steaguri (png) folosite de region cards.
+Flag icons (png) used by the region cards.
 
-## Limitari cunoscute
+## Known limitations
 
-| Aspect | Realitate |
+| Aspect | Reality |
 |---|---|
-| Blocam servere, nu jucatori | Un RU poate aparea pe server Frankfurt |
-| IP-urile Valve se pot schimba | `regions.json` necesita update ocazional |
-| Necesita Administrator | Pentru a modifica firewall-ul |
-| Timp matchmaking mai mare | Mai putine servere disponibile |
-| VPN nu ajuta la ping | Adauga overhead, nu scade ms-urile |
+| We block servers, not players | An RU player can still appear on a Frankfurt server |
+| Valve IPs can change | `regions.json` needs an occasional update |
+| Requires Administrator | To modify the firewall |
+| Longer matchmaking time | Fewer servers available |
+| VPN does not help ping | It adds overhead, it does not lower ms |
